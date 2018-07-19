@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 class="mui-title">cardview（卡片视图）</h1>
+		</header>
+		<div class="mui-content">
+			<div class="mui-card">
+				<div class="mui-card-header mui-card-media" style="height:40vw;display: flex;justify-content: center;" id="carImg">
+					<img id="img11" style="width: auto;height:auto;max-width: 100%;max-height:100%;" />
+				</div>
+				<div class="mui-card-content">
+					<div class="mui-card-content-inner">
+						<p>车辆信息：</p>
+						<p style="color: #333;">
+							<span>车牌：</span><span id="carNum"></span>(<span id="carColor"></span>)
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script src="http://libs.baidu.com/jquery/2.1.4/jquery.min.js"></script>
+		<script src="../js/mui.min.js"></script>
+		<script type="text/javascript">
+			var imageUrl = '';
+			mui.init({
+				beforeback: function() {
+					//获得列表界面的webview
+					console.log('返回')
+					//返回true，继续页面关闭逻辑
+					if(imageUrl) {
+						$.ajax({
+							type: "post",
+							url: "http://192.168.11.144:3333/pic/delPic",
+							data: {
+								imageUrl: imageUrl
+							},
+							async: true,
+							success: function(data) {
+								console.log(data);
+							}
+						});
+					}
+
+					return true;
+				}
+			})
+			mui.plusReady(function() {
+				var self = plus.webview.currentWebview();
+				var data = JSON.parse(self.data);
+				console.log(data);
+				imageUrl = data.imageUrl;
+				data.imageUrl = data.imageUrl.replace('public', '');
+				console.log(data.imageUrl);
+				//				document.getElementById('img11').style.backgroundImage='URL(http://192.168.11.144:3333'+data.imageUrl+')';
+				document.getElementById('img11').src = 'http://192.168.11.144:3333' + data.imageUrl;
+				//				$("#carImg").css('backgroundImage', 'URL(http://192.168.11.144:3333' + data.imageUrl + ')');
+				document.getElementById('carNum').textContent = data.result.words_result.number;
+				document.getElementById('carColor').textContent = data.result.words_result.color;
+
+			});
+		</script>
+	</body>
+
+</html>

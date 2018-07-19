@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title></title>
+		<script src="js/mui.min.js"></script>
+		<link href="css/mui.min.css" rel="stylesheet" />
+
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+			<!--<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>-->
+			<h1 class="mui-title">9宫格默认样式</h1>
+		</header>
+		<div class="mui-content" id="myContent">
+			<ul class="mui-table-view mui-grid-view mui-grid-9">
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-3">
+					<a href="#" id="myCarm">
+						<span class="mui-icon mui-icon-camera"></span>
+						<div class="mui-media-body">植物识别</div>
+					</a>
+				</li>
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-3">
+					<a href="#">
+						<span class="mui-icon mui-icon-email"><span class="mui-badge">5</span></span>
+						<div class="mui-media-body">Email</div>
+					</a>
+				</li>
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-3">
+					<a href="#">
+						<span class="mui-icon mui-icon-chatbubble"></span>
+						<div class="mui-media-body">Chat</div>
+					</a>
+				</li>
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-3">
+					<a href="#">
+						<span class="mui-icon mui-icon-location"></span>
+						<div class="mui-media-body">location</div>
+					</a>
+				</li>
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-3">
+					<a href="#">
+						<span class="mui-icon mui-icon-search"></span>
+						<div class="mui-media-body">Search</div>
+					</a>
+				</li>
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-3">
+					<a href="#">
+						<span class="mui-icon mui-icon-phone"></span>
+						<div class="mui-media-body">Phone</div>
+					</a>
+				</li>
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-3">
+					<a href="#">
+						<span class="mui-icon mui-icon-gear"></span>
+						<div class="mui-media-body">Setting</div>
+					</a>
+				</li>
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-3">
+					<a href="#">
+						<span class="mui-icon mui-icon-info"></span>
+						<div class="mui-media-body">about</div>
+					</a>
+				</li>
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-3">
+					<a href="#">
+						<span class="mui-icon mui-icon-more"></span>
+						<div class="mui-media-body">more</div>
+					</a>
+				</li>
+			</ul>
+		</div>
+		<script type="text/javascript" charset="utf-8">
+			mui.init({
+				pullRefresh: {
+					container: "#myContent", //下拉刷新容器标识，querySelector能定位的css选择器均可，比如：id、.class等
+					down: {
+						style: 'circle', //必选，下拉刷新样式，目前支持原生5+ ‘circle’ 样式
+						color: '#2BD009', //可选，默认“#2BD009” 下拉刷新控件颜色
+						height: '50px', //可选,默认50px.下拉刷新控件的高度,
+						range: '100px', //可选 默认100px,控件可下拉拖拽的范围
+						offset: '0px', //可选 默认0px,下拉刷新控件的起始位置
+						auto: true, //可选,默认false.首次加载自动上拉刷新一次
+						callback: function() {
+							mui.toast('下拉刷新')
+							mui('#myContent').pullRefresh().endPulldown()
+						} //必选，刷新函数，根据具体业务来编写，比如通过ajax从服务器获取新数据；
+					}
+				}
+			});
+			mui.plusReady(function() {
+				document.getElementById('myCarm').addEventListener('tap', function() {
+					var cmr = plus.camera.getCamera();
+					var res = cmr.supportedImageResolutions[0];
+					var fmt = cmr.supportedImageFormats[0];
+					console.log("Resolution: " + res + ", Format: " + fmt);
+					cmr.captureImage(function(path) {
+//							alert("Capture image success: " + path);
+							upload(path)
+						},
+						function(error) {
+//							alert("Capture image failed: " + error.message);
+						}, {
+							resolution: res,
+							format: fmt
+						}
+					);
+				})
+			})
+
+			// 上传的方法
+			function upload(imageUrl) {
+				plus.nativeUI.showWaiting( "识别中..." );
+				var url = "http://192.168.11.144:3333/pic/test"
+				createUp(imageUrl);
+				console.log(imageUrl);
+
+				function createUp(imageUrl) {
+					var task = plus.uploader.createUpload(url, {
+						method: "POST"
+					}, function(t, status) { //上传完成
+						if(status == 200) {
+							console.log("上传成功：" + t.responseText);
+							plus.nativeUI.closeWaiting();
+							mui.openWindow({
+								url: './pages/detail.html',
+								extras: {
+									data: t.responseText,//扩展参数
+								}
+							});
+						} else {
+							console.log("上传失败：" + status);
+						}
+					});
+					//添加其他参数
+					//	    task.addData("name","test");
+					task.addFile(imageUrl, {
+						key: 'file'
+					});
+					task.start();
+				}
+			}
+		</script>
+	</body>
+
+</html>
