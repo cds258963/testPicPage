@@ -98,11 +98,12 @@
 					var fmt = cmr.supportedImageFormats[0];
 					console.log("Resolution: " + res + ", Format: " + fmt);
 					cmr.captureImage(function(path) {
-//							alert("Capture image success: " + path);
-							upload(path)
+							//							alert("Capture image success: " + path);
+//							upload(path)
+							toZip(path) 
 						},
 						function(error) {
-//							alert("Capture image failed: " + error.message);
+							//							alert("Capture image failed: " + error.message);
 						}, {
 							resolution: res,
 							format: fmt
@@ -110,10 +111,52 @@
 					);
 				})
 			})
+			//压缩图片
+			function toZip(path) {
+				var IMAGE_UNSPECIFIED = "image/*";
+				var PHOTOZOOM = 2; // 获取完图片返回key
+				var PHOTOLAT = 1; // 剪裁完毕后返回key
+				var main = plus.android.runtimeMainActivity();
+				var Intent = plus.android.importClass("android.content.Intent");
+				var MediaStore = plus.android.importClass("android.provider.MediaStore");
+				var File = plus.android.importClass("java.io.File");
+				var Uri = plus.android.importClass("android.net.Uri");
+				var intent = new Intent(Intent.ACTION_PICK, null);
+				intent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, IMAGE_UNSPECIFIED);
+				main.startActivityForResult(intent, PHOTOZOOM);
+				main.onActivityResult = function(requestCode, resultCode, data) {
+					if(PHOTOZOOM == requestCode) {
+						var outPutPath = plus.io.convertLocalFileSystemURL(path);
+						var file = new File(outPutPath);
+						// 输出目录uri
+						var outPutUri = Uri.fromFile(file);
+						plus.android.importClass(data);
+						var uri = data.getData();
+						var cropIntent = new Intent("com.android.camera.action.CROP");
+						cropIntent.setDataAndType(uri, IMAGE_UNSPECIFIED);
+						// 截图完毕后 输出目录
+						cropIntent.putExtra(MediaStore.EXTRA_OUTPUT, outPutUri);
+						cropIntent.putExtra("crop", "true");
+						// aspectX aspectY 是宽高的比例
+						cropIntent.putExtra("aspectX", 1);
+						cropIntent.putExtra("aspectY", 1);
+						// outputX outputY 是裁剪图片宽高
+						cropIntent.putExtra("outputX", 64);
+						cropIntent.putExtra("outputY", 64);
+						cropIntent.putExtra("return-data", true);
+						main.startActivityForResult(cropIntent, PHOTOLAT); 
+					} else if(requestCode == PHOTOLAT) {
+						// 判断 剪裁完后的图片输出是否存在
+						var file = new File(outPutPath);
+						var a = file.exists();
+						console.log(a)
+					}
+				};
+			}
 
 			// 上传的方法
 			function upload(imageUrl) {
-				plus.nativeUI.showWaiting( "识别中..." );
+				plus.nativeUI.showWaiting("识别中...");
 				var url = "http://192.168.11.144:3333/pic/test"
 				createUp(imageUrl);
 				console.log(imageUrl);
@@ -128,7 +171,7 @@
 							mui.openWindow({
 								url: './pages/detail.html',
 								extras: {
-									data: t.responseText,//扩展参数
+									data: t.responseText, //扩展参数
 								}
 							});
 						} else {
